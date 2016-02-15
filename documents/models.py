@@ -55,8 +55,30 @@ class DocumentManager(models.Manager):
 
         return None
 
-    def create_document_from_url(self, url):
+    def create_from_url(self, url, content_type, **kwargs):
+        doc_id = uuid.uuid5(uuid.NAMESPACE_URL, url.lower().encode('utf8', 'replace')).hex
+
+        with transaction.atomic():
+            # create new file object
+            remote_file = File.objects.create(
+                name=url,
+                content_type=content_type,
+                origin_url=url)
+
+            return self.create(
+                id=doc_id,
+                title=kwargs.pop('title', url),
+                attached_file=remote_file,
+                **{key: value for key, value in kwargs.items()})
+
         return None
+
+    def get_from_url(self, url):
+        doc_id = uuid.uuid5(uuid.NAMESPACE_URL, url.lower().encode('utf8', 'replace')).hex
+        if self.filter(id=doc_id):
+            return self.get(id=doc_id)
+        else:
+            return None
 
 
 class Document(ResourceMixin, models.Model):

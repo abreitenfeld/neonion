@@ -14,6 +14,8 @@ from common.exceptions import InvalidResourceTypeError, InvalidAnnotationError
 from django.http import JsonResponse
 from api.decorators import require_group_permission
 from documents.models import Document
+from common.dispatcher import dispatch_annotation
+from common.gmpg.helpers import add_page_to_annotation
 
 
 class AnnotationListView(APIView):
@@ -91,6 +93,7 @@ class AnnotationListView(APIView):
                 except Exception:
                     pass
 
+            dispatch_annotation("POST", add_page_to_annotation(annotation))
         except InvalidAnnotationError:
             pass
         except InvalidResourceTypeError:
@@ -127,6 +130,8 @@ class AnnotationDetailView(APIView):
                                     data=request.body, headers=headers)
             annotation = response.json()
         
+            dispatch_annotation("PUT", annotation)
+
         except InvalidAnnotationError:
             pass
         except InvalidResourceTypeError:
@@ -138,6 +143,9 @@ class AnnotationDetailView(APIView):
     def delete(self, request, group_pk, document_pk, annotation_pk, format=None):
         """Deletes the specified annotation object"""
         requests.delete(settings.ANNOTATION_STORE_URL + '/annotations/' + annotation_pk)
+
+        dispatch_annotation("DELETE", json.loads(request.body))
+
         return Response('', status=204)
 
 

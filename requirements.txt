@@ -6,3 +6,4 @@ enum34==1.0.4
 pyelasticsearch==1.4
 SPARQLWrapper==1.6.4
 beautifulsoup4==4.3.2
+django-auth-ldap
